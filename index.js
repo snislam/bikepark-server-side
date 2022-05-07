@@ -61,6 +61,13 @@ async function run() {
             res.send(result)
         })
 
+        // insert an item in database
+        app.post('/bikeitems', async (req, res) => {
+            const body = req.body;
+            const result = await bikeCollection.insertOne(body);
+            res.send(result)
+        })
+
     } finally {
 
     }
