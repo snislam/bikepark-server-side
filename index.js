@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const res = require('express/lib/response');
 const port = process.env.PORT || 5000;
 
@@ -17,12 +17,6 @@ app.use(express.json())
 // mongodbconnection
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ajbho.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
-// client.connect(err => {
-//     const collection = client.db("test").collection("devices");
-//     console.log('connected')
-//     // perform actions on the collection object
-//     client.close();
-// });
 
 async function run() {
     try {
@@ -36,6 +30,35 @@ async function run() {
             const cursor = bikeCollection.find(query);
             const items = await cursor.toArray();
             res.send(items);
+        })
+
+        // find a data from database mongo
+        app.get('/inventory/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await bikeCollection.findOne(query)
+            res.send(result)
+        })
+
+        // update a data from mongodb database
+        app.put('/inventory/:id', async (req, res) => {
+            const id = req.params.id;
+            const body = req.body;
+            console.log(body)
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true }
+            const updateProduct = {
+                $set: {
+                    name: body.name,
+                    img: body.img,
+                    price: body.price,
+                    supplier: body.supplier,
+                    description: body.description,
+                    quantity: body.quantity
+                }
+            }
+            const result = await bikeCollection.updateOne(filter, updateProduct, options)
+            res.send(result)
         })
 
     } finally {
