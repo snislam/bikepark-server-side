@@ -23,6 +23,7 @@ async function run() {
         await client.connect()
         const bikeCollection = client.db("bikePark").collection("bikeCollection");
         const faculty = client.db("bikePark").collection("faculty");
+        const blogCollection = client.db("bikePark").collection("blog")
         console.log("connected")
 
         // get all bike items api
@@ -45,6 +46,14 @@ async function run() {
             const cursor = faculty.find(query)
             const result = await cursor.toArray()
             res.send(result)
+        })
+
+        // get blog data
+        app.get('/blogs', async (req, res) => {
+            const query = {};
+            const cursor = blogCollection.find(query)
+            const result = await cursor.toArray();
+            res.send(result);
         })
 
         // find a data from database mongo
