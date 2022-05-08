@@ -1,18 +1,34 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const res = require('express/lib/response');
 const port = process.env.PORT || 5000;
 
 
-// bikeuser1
-// Ncm9Jqk55kUA04Fe
-
 // middleware
 app.use(cors())
 app.use(express.json())
+
+// middletear
+async function verifyJWT(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send({ message: "unautorized access" });
+    }
+    const token = authHeader.split(' ')[1]
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(403).send({ message: "Forbidden" })
+        } else {
+            req.decoded = decoded;
+            next();
+        }
+    })
+}
+
 
 // mongodbconnection
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ajbho.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
@@ -26,18 +42,33 @@ async function run() {
         const blogCollection = client.db("bikePark").collection("blog")
         console.log("connected")
 
+
+        // post user for jwt
+        app.post('/token', async (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '1d' })
+            res.send(token)
+        })
+
         // get all bike items api
         app.get('/bikeitems', async (req, res) => {
-            const email = req.query.email;
-            let query;
-            if (email) {
-                query = { email: email }
-            } else {
-                query = {};
-            }
+            const query = {}
             const cursor = bikeCollection.find(query);
             const items = await cursor.toArray();
             res.send(items);
+        })
+
+        app.get('/mybikeitems', verifyJWT, async (req, res) => {
+            const decodedEmail = req.decoded.email;
+            const email = req.query.email;
+            if (email === decodedEmail) {
+                const query = { email }
+                const cursor = bikeCollection.find(query);
+                const items = await cursor.toArray();
+                res.send(items);
+            } else {
+                res.status(403).send({ message: "Forbidden" })
+            }
         })
 
         // get faculty data
