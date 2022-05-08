@@ -26,7 +26,13 @@ async function run() {
 
         // get all bike items api
         app.get('/bikeitems', async (req, res) => {
-            const query = {};
+            const email = req.query.email;
+            let query;
+            if (email) {
+                query = { email: email }
+            } else {
+                query = {};
+            }
             const cursor = bikeCollection.find(query);
             const items = await cursor.toArray();
             res.send(items);
@@ -65,6 +71,14 @@ async function run() {
         app.post('/bikeitems', async (req, res) => {
             const body = req.body;
             const result = await bikeCollection.insertOne(body);
+            res.send(result)
+        })
+
+        // dlete an itemm 
+        app.delete('/bikeitems/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await bikeCollection.deleteOne(query)
             res.send(result)
         })
 
