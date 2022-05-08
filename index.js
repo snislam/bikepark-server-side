@@ -21,7 +21,8 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run() {
     try {
         await client.connect()
-        const bikeCollection = client.db("bikePark").collection("bikeCollection")
+        const bikeCollection = client.db("bikePark").collection("bikeCollection");
+        const faculty = client.db("bikePark").collection("faculty");
         console.log("connected")
 
         // get all bike items api
@@ -36,6 +37,14 @@ async function run() {
             const cursor = bikeCollection.find(query);
             const items = await cursor.toArray();
             res.send(items);
+        })
+
+        // get faculty data
+        app.get('/faculty', async (req, res) => {
+            const query = {}
+            const cursor = faculty.find(query)
+            const result = await cursor.toArray()
+            res.send(result)
         })
 
         // find a data from database mongo
